@@ -15,6 +15,7 @@ import {
   type MemberView,
   type Result,
 } from "./hiring/types";
+import type { Role } from "./roles";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -248,14 +249,21 @@ export async function listInterviewerOptions(orgUserId: string): Promise<Intervi
   return [owner, ...members];
 }
 
+export type ValidInvite = {
+  status: "valid";
+  organisationName: string;
+  name: string;
+  email: string;
+  accountExists: boolean;
+  existingRole: Role | null;
+};
+
+export type InviteResult = ValidInvite | { status: "invalid" | "expired" };
+
 /** Looks up a pending invite by its raw token. Never returns org details for an invalid token. */
-export async function getInvite(
-  token: string,
-): Promise<
-  | { status: "valid"; organisationName: string; name: string; email: string }
-  | { status: "invalid" | "expired" }
-> {
-  const member = await getDb().organisationMember.findUnique({
+export async function getInvite(token: string): Promise<InviteResult> {
+  const db = getDb();
+  const member = await db.organisationMember.findUnique({
     where: { inviteTokenHash: hashToken(token) },
     select: {
       status: true,
@@ -267,11 +275,19 @@ export async function getInvite(
   });
   if (!member || member.status !== "invited") return { status: "invalid" };
   if (!member.inviteExpiresAt || member.inviteExpiresAt < new Date()) return { status: "expired" };
+
+  const user = await db.user.findUnique({
+    where: { email: member.email },
+    select: { role: true },
+  });
+
   return {
     status: "valid",
     organisationName: member.organisationProfile.businessName,
     name: member.name,
     email: member.email,
+    accountExists: Boolean(user),
+    existingRole: user?.role ?? null,
   };
 }
 

@@ -42,6 +42,8 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               name={invite.name}
               email={invite.email}
               googleEnabled={Boolean(getEnv().GOOGLE_CLIENT_ID)}
+              accountExists={invite.accountExists}
+              existingRole={invite.existingRole}
             />
           )}
         </Card>

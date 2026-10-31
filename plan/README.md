@@ -21,3 +21,4 @@ All implementation plans are stored here. See `AGENTS.md` → Project Operating 
 | 2026-09-26 | [Role dashboards and navbars](2026-09-26-role-dashboards.md) | shipped |
 | 2026-09-26 | [Resume library, AI skills, recommendations and screening](2026-09-26-resume-library-and-screening.md) | shipped |
 | 2026-09-26 | [Hiring pipelines, interviews and Hiring Managers](2026-09-26-hiring-pipelines-and-interviews.md) | in-progress |
+| 2026-10-31 | [Invite existing account handling & test user reset](2026-10-31-invite-existing-account-handling.md) | shipped |

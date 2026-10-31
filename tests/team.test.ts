@@ -309,6 +309,42 @@ describe("resendInvite / revokeInvite / deactivateMember scoping", () => {
   });
 });
 
+describe("getInvite", () => {
+  it("returns accountExists: false when no user row exists for the invited email", async () => {
+    const owner = await createOrgOwner();
+    const email = uniqueEmail("fresh");
+    unwrap(await inviteMember(owner.id, { name: "Fresh", email }));
+    const token = await lastInviteToken();
+
+    const invite = await getInvite(token);
+    expect(invite).toMatchObject({
+      status: "valid",
+      organisationName: "Acme",
+      email,
+      accountExists: false,
+      existingRole: null,
+    });
+  });
+
+  it("returns accountExists: true and existingRole when a user row exists", async () => {
+    const owner = await createOrgOwner();
+    const email = uniqueEmail("registered");
+    await createAccount("user", email);
+
+    unwrap(await inviteMember(owner.id, { name: "Existing", email }));
+    const token = await lastInviteToken();
+
+    const invite = await getInvite(token);
+    expect(invite).toMatchObject({
+      status: "valid",
+      organisationName: "Acme",
+      email,
+      accountExists: true,
+      existingRole: "user",
+    });
+  });
+});
+
 describe("listMembers", () => {
   it("lists newest first and computes expired", async () => {
     const owner = await createOrgOwner();

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useActionErrorToast } from "@/components/use-action-error-toast";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
+import type { Role } from "@/lib/roles";
 import { signUpForInviteAction, type InviteSignUpState } from "./actions";
 import { InviteGoogleButton } from "./invite-google-button";
 
@@ -18,18 +19,65 @@ export function JoinInviteCard({
   name,
   email,
   googleEnabled,
+  accountExists = false,
+  existingRole = null,
 }: {
   token: string;
   organisationName: string;
   name: string;
   email: string;
   googleEnabled: boolean;
+  accountExists?: boolean;
+  existingRole?: Role | null;
 }) {
   const [state, action, pending] = useActionState<InviteSignUpState, FormData>(
     signUpForInviteAction,
     { status: "idle" },
   );
   useActionErrorToast(state);
+
+  if (accountExists && (existingRole === null || existingRole === "hiring_manager")) {
+    return (
+      <>
+        <CardHeader>
+          <CardTitle>Join {organisationName} on VenturePath</CardTitle>
+          <CardDescription>
+            You already have an account with {email}. Sign in to accept your invitation as a hiring
+            manager.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Link
+            href={`/hiring-manager/sign-in?invite=${token}`}
+            className={buttonVariants({ className: "w-full cursor-pointer" })}
+          >
+            Sign in to accept invite
+          </Link>
+          {googleEnabled && <InviteGoogleButton token={token} />}
+        </CardContent>
+      </>
+    );
+  }
+
+  if (accountExists) {
+    const roleLabel = existingRole === "user" ? "candidate" : existingRole;
+    return (
+      <>
+        <CardHeader>
+          <CardTitle>Role conflict</CardTitle>
+          <CardDescription>
+            The email <strong>{email}</strong> is already registered as a {roleLabel} account. An
+            existing {roleLabel} account cannot accept a hiring manager invitation (ADR-036).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
+          <p>
+            Please ask {organisationName} to send an invitation to a different email address.
+          </p>
+        </CardContent>
+      </>
+    );
+  }
 
   if (state.status === "sent") return <CheckInbox email={state.email} token={token} />;
 
@@ -77,7 +125,7 @@ export function JoinInviteCard({
               maxLength={128}
             />
           </div>
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="cursor-pointer">
             {pending ? "Creating account…" : "Create account"}
           </Button>
         </form>
@@ -121,7 +169,7 @@ function CheckInbox({ email, token }: { email: string; token: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button variant="outline" onClick={onResend} disabled={sending}>
+        <Button variant="outline" className="cursor-pointer" onClick={onResend} disabled={sending}>
           Resend verification email
         </Button>
       </CardContent>

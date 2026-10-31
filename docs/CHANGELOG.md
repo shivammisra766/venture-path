@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-31 — Invite existing account handling & test user reset
+
+Fixed:
+- Hiring manager invites for already-registered email addresses no longer show a "Create account" form or trap users in an unsent "check your inbox for verification email" state.
+- `getInvite` now returns `accountExists` and `existingRole`.
+- `/invite/[token]` detects existing accounts: presents eligible accounts with a direct "Sign in to accept invite" button, and warns accounts with ineligible roles (`user`, `organisation`) about the ADR-036 role conflict.
+- `signUpForInviteAction` checks for existing accounts and returns a clear descriptive error instead of invoking Better Auth `signUpEmail` and returning a synthetic success.
+- Test user `shivammisra766@gmail.com` reset in PostgreSQL to allow new hiring manager account creation.
+
 ## 2026-09-26 — Hiring pipelines, interviews and hiring managers
 
 Added:

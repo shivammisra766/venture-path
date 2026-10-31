@@ -49,6 +49,20 @@ export async function signUpForInviteAction(
     };
   }
 
+  if (invite.accountExists) {
+    if (invite.existingRole !== null && invite.existingRole !== "hiring_manager") {
+      const roleLabel = invite.existingRole === "user" ? "candidate" : invite.existingRole;
+      return {
+        status: "error",
+        message: `An account with this email already exists as a ${roleLabel} account. Accept the invite with a different email.`,
+      };
+    }
+    return {
+      status: "error",
+      message: "An account with this email already exists. Please sign in to accept the invite.",
+    };
+  }
+
   try {
     await getAuth().api.signUpEmail({
       body: { name, email, password, callbackURL: `/invite/${token}` },
